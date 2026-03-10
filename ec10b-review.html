@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EC10b Midterm Review</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a40;
+    --accent: #f0c040;
+    --accent2: #5b8dee;
+    --accent3: #e05b7a;
+    --text: #e8e8f0;
+    --muted: #7070a0;
+    --correct: #3dd68c;
+    --wrong: #e05b7a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(91,141,238,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91,141,238,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #app { position: relative; z-index: 1; }
+
+  /* ── SCREENS ── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ══════════════════════
+     HOME SCREEN
+  ══════════════════════ */
+  #home {
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .logo-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.3em;
+    border: 1px solid var(--accent);
+    padding: 0.3rem 0.8rem;
+    margin-bottom: 2rem;
+    display: inline-block;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 1rem;
+    margin-bottom: 3rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+  }
+
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.2rem;
+    max-width: 800px;
+    width: 100%;
+  }
+
+  .mode-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 1.8rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .mode-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .mode-card:hover::before { opacity: 1; }
+
+  .mode-card .icon {
+    font-size: 2rem;
+    margin-bottom: 0.8rem;
+    display: block;
+  }
+
+  .mode-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .mode-card p {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .mode-card .tag {
+    position: absolute;
+    top: 0.8rem;
+    right: 0.8rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+  }
+
+  .stats-bar {
+    margin-top: 3rem;
+    display: flex;
+    gap: 2rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .stats-bar span { color: var(--accent); font-size: 1.1rem; font-weight: 600; }
+
+  /* ══════════════════════
+     QUIZ SCREEN
+  ══════════════════════ */
+  #quiz {
+    padding: 2rem;
+    max-width: 760px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .back-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.8rem;
+    background: none;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+
+  .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .progress-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.4s ease;
+    border-radius: 2px;
+  }
+
+  .q-counter {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .lecture-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent2);
+    letter-spacing: 0.15em;
+    margin-bottom: 1rem;
+  }
+
+  .question-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+    line-height: 1.5;
+    margin-bottom: 2rem;
+    color: var(--text);
+  }
+
+  .choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  .choice:hover:not(:disabled) { border-color: var(--accent2); background: #1e1e30; }
+
+  .choice-letter {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    min-width: 1.2rem;
+    margin-top: 0.1rem;
+  }
+
+  .choice.correct { border-color: var(--correct) !important; background: rgba(61,214,140,0.08) !important; }
+  .choice.correct .choice-letter { color: var(--correct); }
+  .choice.wrong { border-color: var(--wrong) !important; background: rgba(224,91,122,0.08) !important; }
+  .choice.wrong .choice-letter { color: var(--wrong); }
+  .choice:disabled { cursor: default; }
+
+  .feedback-box {
+    margin-top: 1.5rem;
+    padding: 1.2rem 1.4rem;
+    border-left: 3px solid var(--correct);
+    background: rgba(61,214,140,0.06);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text);
+    display: none;
+  }
+
+  .feedback-box.wrong-fb { border-color: var(--wrong); background: rgba(224,91,122,0.06); }
+  .feedback-box.show { display: block; }
+
+  .feedback-box strong {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    display: block;
+    margin-bottom: 0.4rem;
+    color: var(--correct);
+  }
+
+  .feedback-box.wrong-fb strong { color: var(--wrong); }
+
+  .next-btn {
+    margin-top: 1.5rem;
+    padding: 0.9rem 2rem;
+    background: var(--accent);
+    color: #0a0a0f;
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    display: none;
+    transition: opacity 0.15s;
+  }
+
+  .next-btn:hover { opacity: 0.85; }
+  .next-btn.show { display: block; }
+
+  /* ══════════════════════
+     FLASHCARD SCREEN
+  ══════════════════════ */
+  #flashcards {
+    padding: 2rem;
+    max-width: 700px;
+    margin: 0 auto;
+    width: 100%;
+    align-items: center;
+  }
+
+  .fc-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 3rem;
+  }
+
+  .fc-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    flex: 1;
+    text-align: center;
+  }
+
+  .fc-wrap {
+    perspective: 1200px;
+    width: 100%;
+    max-width: 600px;
+    height: 280px;
+    cursor: pointer;
+    margin-bottom: 2rem;
+  }
+
+  .fc-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(.4,0,.2,1);
+  }
+
+  .fc-wrap.flipped .fc-inner { transform: rotateY(180deg); }
+
+  .fc-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .fc-face.back {
+    transform: rotateY(180deg);
+    border-color: var(--accent2);
+    background: #161624;
+  }
+
+  .fc-face .face-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    position: absolute;
+    top: 1rem;
+    left: 1.2rem;
+  }
+
+  .fc-face .term {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .fc-face .hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .fc-face .definition {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .fc-face .formula {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    color: var(--accent);
+    margin-top: 0.8rem;
+    background: rgba(240,192,64,0.1);
+    padding: 0.4rem 0.8rem;
+    border: 1px solid rgba(240,192,64,0.3);
+  }
+
+  .fc-nav {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .fc-btn {
+    padding: 0.7rem 1.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+
+  .fc-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .fc-counter { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--muted); }
+
+  /* ══════════════════════
+     FORMULA SCREEN
+  ══════════════════════ */
+  #formulas {
+    padding: 2rem;
+    max-width: 760px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .formulas-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .formulas-sub {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .formula-section { margin-bottom: 2.5rem; }
+
+  .formula-section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    color: var(--accent2);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .formula-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 0.75rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .formula-eq {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    color: var(--accent);
+    background: rgba(240,192,64,0.07);
+    padding: 0.5rem 0.8rem;
+    border: 1px solid rgba(240,192,64,0.2);
+    align-self: center;
+  }
+
+  .formula-desc {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .formula-desc em { color: var(--muted); font-style: normal; font-size: 0.78rem; }
+
+  /* ══════════════════════
+     RESULTS SCREEN
+  ══════════════════════ */
+  #results {
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .score-ring {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 4px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    position: relative;
+  }
+
+  .score-ring::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent) var(--pct), var(--border) 0);
+    z-index: -1;
+  }
+
+  .score-ring .score-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .score-ring .score-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+  }
+
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 2rem; }
+
+  .result-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+  .btn-primary {
+    padding: 0.9rem 2rem;
+    background: var(--accent);
+    color: #0a0a0f;
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .btn-primary:hover { opacity: 0.85; }
+
+  .btn-sec {
+    padding: 0.9rem 2rem;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-sec:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ══════════════════════
+     ANIMATIONS
+  ══════════════════════ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .screen.active > * {
+    animation: fadeUp 0.4s ease both;
+  }
+
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+
+  .pop { animation: pop 0.25s ease; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══ HOME ═══ -->
+  <div id="home" class="screen active">
+    <div class="logo-badge">EC10b · SPRING 2026</div>
+    <h1>Macro<span>Review</span></h1>
+    <p class="subtitle">Lectures 1–3 · Laibson & Furman · Midterm Prep</p>
+    <div class="mode-grid">
+      <div class="mode-card" onclick="startQuiz('all')">
+        <span class="icon">🎯</span>
+        <div class="tag">ADAPTIVE</div>
+        <h3>Full Quiz</h3>
+        <p>All 3 lectures, 20 questions, randomized. Best for complete review.</p>
+      </div>
+      <div class="mode-card" onclick="startQuiz('L1')">
+        <span class="icon">📐</span>
+        <div class="tag">LEC 1</div>
+        <h3>Macro Basics</h3>
+        <p>What is macroeconomics? Growth vs. fluctuations, at potential vs. below.</p>
+      </div>
+      <div class="mode-card" onclick="startQuiz('L2')">
+        <span class="icon">📊</span>
+        <div class="tag">LEC 2</div>
+        <h3>GDP & Wealth</h3>
+        <p>Y ≡ C+I+G+(X−M), value added, flows vs. stocks, limits of GDP.</p>
+      </div>
+      <div class="mode-card" onclick="startQuiz('L3')">
+        <span class="icon">💰</span>
+        <div class="tag">LEC 3</div>
+        <h3>Money & Inflation</h3>
+        <p>MV ≡ PY, quantity theory, hyperinflation, nominal anchors.</p>
+      </div>
+      <div class="mode-card" onclick="showScreen('flashcards')">
+        <span class="icon">🃏</span>
+        <div class="tag">TERMS</div>
+        <h3>Flashcards</h3>
+        <p>Key terms & definitions. Click to flip. Great for glossary review.</p>
+      </div>
+      <div class="mode-card" onclick="showScreen('formulas')">
+        <span class="icon">∑</span>
+        <div class="tag">REFERENCE</div>
+        <h3>Formula Sheet</h3>
+        <p>All identities and equations with plain-English explanations.</p>
+      </div>
+    </div>
+    <div class="stats-bar" id="homeStats">
+      <div>Total score: <span id="statScore">—</span></div>
+      <div>Best streak: <span id="statStreak">—</span></div>
+    </div>
+  </div>
+
+  <!-- ═══ QUIZ ═══ -->
+  <div id="quiz" class="screen">
+    <div class="quiz-header">
+      <button class="back-btn" onclick="showScreen('home')">← BACK</button>
+      <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="q-counter" id="qCounter">1 / 20</div>
+    </div>
+    <div class="lecture-tag" id="lectureTag">LECTURE 1</div>
+    <div class="question-text" id="questionText"></div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback-box" id="feedbackBox"><strong></strong><span></span></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">NEXT QUESTION →</button>
+  </div>
+
+  <!-- ═══ FLASHCARDS ═══ -->
+  <div id="flashcards" class="screen">
+    <div class="fc-header" style="width:100%;max-width:600px;">
+      <button class="back-btn" onclick="showScreen('home')">← BACK</button>
+      <div class="fc-title">Key Terms Flashcards</div>
+      <div style="width:60px"></div>
+    </div>
+    <div class="fc-wrap" id="fcWrap" onclick="flipCard()">
+      <div class="fc-inner" id="fcInner">
+        <div class="fc-face front">
+          <span class="face-label">TERM</span>
+          <div class="term" id="fcTerm"></div>
+          <div class="hint">click to reveal</div>
+        </div>
+        <div class="fc-face back">
+          <span class="face-label">DEFINITION</span>
+          <div class="definition" id="fcDef"></div>
+          <div class="formula" id="fcFormula" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+    <div class="fc-nav">
+      <button class="fc-btn" onclick="fcNav(-1)">← PREV</button>
+      <div class="fc-counter" id="fcCounter">1 / 20</div>
+      <button class="fc-btn" onclick="fcNav(1)">NEXT →</button>
+    </div>
+  </div>
+
+  <!-- ═══ FORMULAS ═══ -->
+  <div id="formulas" class="screen">
+    <button class="back-btn" onclick="showScreen('home')" style="align-self:flex-start;margin-bottom:1.5rem">← BACK</button>
+    <div class="formulas-title">Formula Reference</div>
+    <div class="formulas-sub">All key identities and equations from Lectures 1–3</div>
+
+    <div class="formula-section">
+      <div class="formula-section-title">LECTURE 2 · GDP IDENTITIES</div>
+      <div class="formula-card">
+        <div class="formula-eq">Y ≡ C + I + G + (X − M)</div>
+        <div class="formula-desc">
+          Expenditure-based GDP identity. C = Consumption (68%), I = Investment (18%), G = Gov't Spending (16%), X−M = Net Exports (−3%). All spending on final goods.
+          <br><em>Note: imports in C/I/G are subtracted via −M</em>
+        </div>
+      </div>
+      <div class="formula-card">
+        <div class="formula-eq">Production ≡ Expenditure ≡ Income</div>
+        <div class="formula-desc">
+          Three equivalent ways to measure GDP. Equal by definition — every dollar produced is either spent or earned as income.
+          <br><em>GDP = $29.3T in 2024</em>
+        </div>
+      </div>
+      <div class="formula-card">
+        <div class="formula-eq">Value Added = Output − Inputs</div>
+        <div class="formula-desc">
+          Avoids double-counting. GDP = sum of value added at each stage = final sale price.
+          <br><em>Cotton ($5) → Yarn ($4 VA) → Sweater ($31 VA) → GDP = $40</em>
+        </div>
+      </div>
+    </div>
+
+    <div class="formula-section">
+      <div class="formula-section-title">LECTURE 3 · MONEY & INFLATION</div>
+      <div class="formula-card">
+        <div class="formula-eq">M × V ≡ P × Y</div>
+        <div class="formula-desc">
+          Quantity identity (always true by definition). M = money supply, V = velocity, P = price level, Y = real GDP. P×Y = nominal GDP. V is defined as whatever makes it hold.
+        </div>
+      </div>
+      <div class="formula-card">
+        <div class="formula-eq">m + v ≈ π + y</div>
+        <div class="formula-desc">
+          Growth-rate form of the quantity identity. m = money growth, v = velocity growth, π = inflation, y = real GDP growth.
+          <br><em>Uses the approximation: if X = A×B, then x ≈ a + b</em>
+        </div>
+      </div>
+      <div class="formula-card">
+        <div class="formula-eq">π ≈ m − y</div>
+        <div class="formula-desc">
+          Quantity Theory of Money (long-run, assuming v = 0 i.e. constant velocity). Inflation ≈ money growth − real GDP growth.
+          <br><em>Works well cross-country long-run; NOT for short-run prediction</em>
+        </div>
+      </div>
+    </div>
+
+    <div class="formula-section">
+      <div class="formula-section-title">LECTURE 1 · GROWTH RULE</div>
+      <div class="formula-card">
+        <div class="formula-eq">Compound: (1+g)ᵗ</div>
+        <div class="formula-desc">
+          Small growth differences compound enormously. U.S. at 1.7%/yr vs. Argentina at 1.1%/yr since 1900 → U.S. GDP/capita $62k vs. Argentina $17k today.
+          <br><em>Rule of 70: years to double ≈ 70 / growth rate %</em>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RESULTS ═══ -->
+  <div id="results" class="screen">
+    <div class="score-ring" id="scoreRing">
+      <div class="score-num" id="scoreNum">—</div>
+      <div class="score-label">SCORE</div>
+    </div>
+    <div class="result-title" id="resultTitle">Quiz Complete!</div>
+    <div class="result-sub" id="resultSub"></div>
+    <div class="result-btns">
+      <button class="btn-primary" id="retryBtn" onclick="retryQuiz()">RETRY QUIZ</button>
+      <button class="btn-sec" onclick="showScreen('home')">MAIN MENU</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════
+// QUESTION BANK
+// ════════════════════════════════════════
+const ALL_QUESTIONS = [
+
+  // ─── LECTURE 1 ───
+  {lec:'L1', q:"What is the key difference between macroeconomics and microeconomics?",
+   choices:["Macro studies firms; micro studies governments","Macro studies the economy as a whole; micro studies individual agents and their choices","Macro only applies to developed countries","Micro uses math; macro does not"],
+   ans:1, explain:"Macroeconomics = economy as a whole. Microeconomics = how individuals, households, firms, and governments make choices. Macro is 'microfounded' — built on micro optimization."
+  },
+  {lec:'L1', q:"An economy is described as 'below potential.' Which policy response is most appropriate?",
+   choices:["Regulatory reform to expand long-run capacity","Stimulus via monetary or fiscal policy to put idle workers back to work","Trade liberalization to boost exports","Education investment to raise the long-run growth rate"],
+   ans:1, explain:"Below potential = idle workers and capital. The right response is cyclical/stabilization policy (monetary or fiscal stimulus). Growth policies are for expanding potential, not filling the gap."
+  },
+  {lec:'L1', q:"The U.S. grew at ~1.7%/yr and Argentina at ~1.1%/yr from 1900–2024. What best explains the large difference in today's GDP/capita?",
+   choices:["Argentina had higher inflation","Compounding: small rate differences grow exponentially over 124 years","The U.S. received more foreign aid","Argentina had less natural resources"],
+   ans:1, explain:"Compounding is the key. (1.017)^124 vs. (1.011)^124 produces a ~3.5× difference in output. Small growth rate differences compound enormously over decades."
+  },
+  {lec:'L1', q:"Why is running controlled experiments especially difficult in macroeconomics?",
+   choices:["Macroeconomics is too mathematical","Variables are endogenous — causation runs in all directions, and the economy is always changing","There are no disagreements among macroeconomists","GDP data is unavailable"],
+   ans:1, explain:"Macro can't run randomized trials on whole economies. Variables like GDP and unemployment affect each other (endogeneity). The economy also evolves, changing causal relationships over time."
+  },
+  {lec:'L1', q:"Keynes said 'In the long run we are all dead.' What does this mean in the context of macroeconomics?",
+   choices:["Long-run growth doesn't matter","We should only study growth, not fluctuations","Short-run recessions cause immediate real suffering that can't be ignored by focusing only on long-run trends","GDP is a poor measure of welfare"],
+   ans:2, explain:"Keynes argued that short-run recessions cause immediate, unequal harm — Black and Hispanic workers face ~2× the unemployment of white workers in downturns. We can't ignore short-run pain."
+  },
+
+  // ─── LECTURE 2 ───
+  {lec:'L2', q:"A wheat farmer sells $2 wheat to a mill. The mill sells $5 flour to a bakery. The bakery sells $8 bread to consumers. What is the GDP contribution?",
+   choices:["$15 (sum of all transactions)","$8 (final sale price only)","$5 (mill's output)","$2 (raw commodity)"],
+   ans:1, explain:"GDP counts only final goods, or equivalently, the sum of value added: $2 + $3 + $3 = $8. The final sale price equals the sum of all value added. This avoids double counting."
+  },
+  {lec:'L2', q:"A U.S. consumer buys a Japanese car for $30,000. How does this affect the GDP identity Y = C + I + G + (X − M)?",
+   choices:["C rises by $30,000; net effect on Y is zero (M also rises by $30,000)","Y rises by $30,000","G rises by $30,000","X rises by $30,000"],
+   ans:0, explain:"Imported goods are first counted in C (+$30,000), then subtracted via −M (−$30,000). Net effect on Y (domestic GDP) = 0. Only domestically produced goods count."
+  },
+  {lec:'L2', q:"Which of the following is correctly classified as Investment (I) in the GDP framework?",
+   choices:["Purchase of Apple stock on the NYSE","A household buying a new refrigerator","A business buying a new factory building","Social Security payments by the government"],
+   ans:2, explain:"Investment = business fixed investment (equipment, structures), residential investment, and inventories. Stock purchases = financial transactions (not I). Appliances are Consumption. Social Security is a transfer payment, excluded from G."
+  },
+  {lec:'L2', q:"Which of the following is a 'stock' variable rather than a 'flow' variable?",
+   choices:["GDP this year","Household wealth on December 31","Monthly consumer spending","Annual government tax revenue"],
+   ans:1, explain:"Stock = measured at a point in time (e.g., wealth on Dec 31). Flow = measured over a period (e.g., GDP per year, monthly spending). GDP and tax revenue are flows."
+  },
+  {lec:'L2', q:"Why does GDP omit home production (like cooking your own meals)?",
+   choices:["It's illegal to count it","Home production is not a market transaction — no market price exists to measure it","It's already counted in consumption","It's counted in government spending"],
+   ans:1, explain:"GDP counts market activities. If David pays Jason $50 for childcare, it counts. If David cares for his own child, it doesn't — there's no market transaction. The study guide calls this a 'bug, not a feature.'"
+  },
+  {lec:'L2', q:"Robert Kennedy said GDP 'measures everything except that which makes life worthwhile.' Which of these is a well-being factor NOT captured by GDP?",
+   choices:["Business investment","Residential construction","Leisure time and home production","Government purchases of goods"],
+   ans:2, explain:"GDP misses leisure, home production, inequality, health, happiness, political rights, and environmental quality. It even includes crime-prevention spending, which reflects social problems, not well-being."
+  },
+  {lec:'L2', q:"The Human Development Index (HDI) was developed as an alternative welfare measure. What does it combine?",
+   choices:["Inflation, employment, and GDP","Life expectancy, education, and per capita income","Happiness, crime rate, and environment","GDP growth, investment, and net exports"],
+   ans:1, explain:"HDI = life expectancy + education + income. Despite being broader than GDP alone, it correlates strongly with GDP/capita cross-country."
+  },
+  {lec:'L2', q:"Transfer payments like Social Security are excluded from Government Spending (G) in the GDP formula. Why?",
+   choices:["They are counted in Consumption (C) when spent","The government doesn't pay for them","They represent income redistribution, not a direct purchase of goods or services","They are counted in Investment"],
+   ans:0, explain:"Transfer payments are excluded from G because the government isn't buying a good or service — it's redistributing income. However, when recipients spend the transfers on goods, that spending shows up in C."
+  },
+
+  // ─── LECTURE 3 ───
+  {lec:'L3', q:"Which three functions must something perform to be called 'money'?",
+   choices:["Legal tender, taxable, portable","Medium of exchange, store of value, unit of account","Backed by gold, government-issued, electronic","Deflationary, scarce, decentralized"],
+   ans:1, explain:"Money must: (1) be exchangeable for goods (medium of exchange), (2) hold value over time (store of value), and (3) serve as a common yardstick for prices (unit of account). Bitcoin fails #2 (volatile) and #3 (not a unit of account)."
+  },
+  {lec:'L3', q:"In the Quantity Identity M × V ≡ P × Y, what is velocity (V) by definition?",
+   choices:["The speed at which the Fed prints money","The number of times an average dollar changes hands per year; set to make the identity hold","The ratio of inflation to money supply growth","The growth rate of nominal GDP"],
+   ans:1, explain:"V is defined as (P×Y)/M — whatever value makes the identity true. It's not independently measured; it's a residual. In the short run, V fluctuates significantly."
+  },
+  {lec:'L3', q:"Using the Quantity Theory of Money (assuming constant velocity), if money supply grows at 8% and real GDP grows at 3%, what is predicted long-run inflation?",
+   choices:["11%","5%","3%","8%"],
+   ans:1, explain:"π ≈ m − y = 8% − 3% = 5%. The Quantity Theory assumes v = 0 (constant velocity). This formula works well for long-run cross-country patterns."
+  },
+  {lec:'L3', q:"Why does the Quantity Theory of Money work better as a long-run theory than a short-run theory?",
+   choices:["Money supply data is only available annually","Velocity (V) is relatively stable in the long run but fluctuates significantly short-run","Real GDP doesn't change in the short run","Inflation is always zero in the short run"],
+   ans:1, explain:"The QTM assumes v = 0 (constant velocity). But in reality, velocity fluctuates sharply in the short run (e.g., V collapsed during COVID). Long-run, these fluctuations average out, making the theory accurate."
+  },
+  {lec:'L3', q:"Which of the following is identified as a BENEFIT of moderate inflation (around 2%)?",
+   choices:["It reduces government debt automatically","It allows nominal wage cuts during recessions","It gives central banks room to cut interest rates in a downturn","It eliminates shoe-leather costs"],
+   ans:2, explain:"Benefits of moderate inflation: (1) seigniorage, (2) protects workers (firms can avoid layoffs by keeping nominal wages fixed while prices rise), (3) gives central banks room to cut rates in recessions (if baseline inflation is 0%, rates can't go much lower)."
+  },
+  {lec:'L3', q:"Hyperinflation is always caused by:",
+   choices:["Excessive consumer spending","A massive increase in the money supply","High interest rates","A trade deficit"],
+   ans:1, explain:"Hyperinflation (price level doubling within 3 years) is ALWAYS caused by rapid money creation. Causes: (1) printing to 'enrich' the economy, (2) fiscal gaps, (3) inability to borrow. Hungary 1946: prices doubled every 16 hours."
+  },
+  {lec:'L3', q:"What is a 'nominal anchor' and why is it useful?",
+   choices:["A gold reserve that backs currency","A commitment mechanism that pins down inflation expectations, increasing economic predictability","A fixed exchange rate with gold","A government promise not to print money"],
+   ans:1, explain:"A nominal anchor is a credible commitment that pins down inflation expectations. Examples: inflation targeting (e.g., 2% target), fixed exchange rates, money supply rules. Credibility is key — if markets believe the anchor, inflation expectations stay anchored."
+  },
+  {lec:'L3', q:"The German hyperinflation of 1923 is historically significant because:",
+   choices:["It caused World War I","It created the modern central banking system","It weakened the Weimar Republic and contributed to the early rise of the Nazi Party","It led to the Bretton Woods agreement"],
+   ans:2, explain:"German hyperinflation devastated savings and economic confidence, weakening the Weimar Republic. The Great Depression then delivered the final blow, enabling the Nazi Party to come to power. Economic instability has political consequences."
+  },
+];
+
+// ════════════════════════════════════════
+// FLASHCARD DATA
+// ════════════════════════════════════════
+const FLASHCARDS = [
+  {term:"GDP", def:"Market value of all final goods & services produced by factors of production inside a country's borders.", formula:"Y ≡ C + I + G + (X − M)"},
+  {term:"Measurement Identity (≡)", def:"Two quantities equal by definition, not due to a causal mechanism. Example: Production ≡ Expenditure ≡ Income for GDP.", formula:null},
+  {term:"Value Added", def:"Value of output minus value of inputs purchased from other firms. Prevents double-counting in GDP.", formula:"VA = Output − Inputs"},
+  {term:"Flow Variable", def:"Measured over a period of time. GDP per year is a flow.", formula:null},
+  {term:"Stock Variable", def:"Measured at a point in time. Wealth on December 31 is a stock.", formula:null},
+  {term:"Consumption (C)", def:"Household spending on durables, non-durables, and services. ~68% of U.S. GDP in 2024.", formula:null},
+  {term:"Investment (I)", def:"Business fixed investment, residential investment, and inventories. Excludes stock purchases. ~18% of GDP.", formula:null},
+  {term:"Government Spending (G)", def:"Government purchases of goods, services, and investment. Excludes transfer payments (e.g., Social Security). ~16% of GDP.", formula:null},
+  {term:"Net Exports (X − M)", def:"Exports minus imports. Imports are subtracted to remove foreign-produced goods from domestic GDP.", formula:null},
+  {term:"Money (M2)", def:"Currency in circulation + checking accounts + savings accounts + other liquid bank accounts. Excludes bank reserves.", formula:null},
+  {term:"Velocity of Money (V)", def:"Average number of times a dollar changes hands per year. Defined as V = (P×Y)/M to make the quantity identity hold.", formula:"V = (P × Y) / M"},
+  {term:"Quantity Identity", def:"Always true by definition: money supply × velocity = price level × real GDP.", formula:"M × V ≡ P × Y"},
+  {term:"Quantity Theory of Money", def:"Long-run theory assuming constant velocity: inflation ≈ money growth minus real GDP growth.", formula:"π ≈ m − y"},
+  {term:"Inflation (π)", def:"The average increase in prices across the economy, measured using a weighted basket of goods.", formula:null},
+  {term:"Hyperinflation", def:"Price level doubles within 3 years. Always caused by massive money supply increases.", formula:null},
+  {term:"Seigniorage", def:"Government revenue from printing money. A benefit of moderate inflation.", formula:null},
+  {term:"Nominal Anchor", def:"A credible commitment mechanism that pins down inflation expectations and increases economic predictability.", formula:null},
+  {term:"Human Development Index", def:"UN welfare measure combining life expectancy, education, and per capita income. Correlates strongly with GDP.", formula:null},
+  {term:"At Potential", def:"Economy using all available workers and capital. Needs growth policies (education, regulation) to expand capacity.", formula:null},
+  {term:"Below Potential", def:"Economy with idle workers and capital. Needs stabilization policy (monetary/fiscal stimulus) to restore employment.", formula:null},
+];
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+let quizQuestions = [];
+let currentQ = 0;
+let score = 0;
+let answered = false;
+let currentMode = 'all';
+let bestScore = 0;
+let fcIndex = 0;
+let totalCorrect = 0;
+let totalAttempted = 0;
+
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'flashcards') initFlashcards();
+  if (id === 'home') updateStats();
+}
+
+function updateStats() {
+  const s = document.getElementById('statScore');
+  const b = document.getElementById('statStreak');
+  s.textContent = totalAttempted > 0 ? `${Math.round(totalCorrect/totalAttempted*100)}%` : '—';
+  b.textContent = bestScore > 0 ? bestScore : '—';
+}
+
+// ════════════════════════════════════════
+// QUIZ
+// ════════════════════════════════════════
+function startQuiz(mode) {
+  currentMode = mode;
+  let pool = mode === 'all' ? [...ALL_QUESTIONS] : ALL_QUESTIONS.filter(q => q.lec === mode);
+  // Shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  quizQuestions = mode === 'all' ? pool.slice(0, 20) : pool;
+  currentQ = 0;
+  score = 0;
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = quizQuestions[currentQ];
+  const total = quizQuestions.length;
+
+  document.getElementById('progressFill').style.width = `${(currentQ / total) * 100}%`;
+  document.getElementById('qCounter').textContent = `${currentQ + 1} / ${total}`;
+  document.getElementById('lectureTag').textContent = `LECTURE ${q.lec.slice(1)}`;
+  document.getElementById('questionText').textContent = q.q;
+
+  const fb = document.getElementById('feedbackBox');
+  fb.classList.remove('show', 'wrong-fb');
+  document.getElementById('nextBtn').classList.remove('show');
+
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.choices.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice';
+    btn.innerHTML = `<span class="choice-letter">${letters[i]}</span><span>${c}</span>`;
+    btn.onclick = () => selectAnswer(i);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  const q = quizQuestions[currentQ];
+  const choices = document.querySelectorAll('.choice');
+  totalAttempted++;
+
+  choices.forEach(c => c.disabled = true);
+  choices[q.ans].classList.add('correct');
+
+  const fb = document.getElementById('feedbackBox');
+  const fbStrong = fb.querySelector('strong');
+  const fbSpan = fb.querySelector('span');
+
+  if (idx === q.ans) {
+    score++;
+    totalCorrect++;
+    fbStrong.textContent = '✓ CORRECT';
+    fb.classList.add('show');
+    fb.classList.remove('wrong-fb');
+  } else {
+    choices[idx].classList.add('wrong');
+    fbStrong.textContent = '✗ INCORRECT';
+    fb.classList.add('show', 'wrong-fb');
+  }
+  fbSpan.textContent = q.explain;
+  document.getElementById('nextBtn').classList.add('show');
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= quizQuestions.length) {
+    showResults();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResults() {
+  showScreen('results');
+  const pct = Math.round((score / quizQuestions.length) * 100);
+  if (score > bestScore) bestScore = score;
+
+  const ring = document.getElementById('scoreRing');
+  ring.style.setProperty('--pct', `${pct * 3.6}deg`);
+  document.getElementById('scoreNum').textContent = `${pct}%`;
+
+  let title, sub;
+  if (pct === 100) { title = "Perfect Score! 🏆"; sub = "Outstanding. You've mastered Lectures 1–3."; }
+  else if (pct >= 80) { title = "Strong Work! 📈"; sub = `${score}/${quizQuestions.length} correct. You're well-prepared — review any wrong answers.`; }
+  else if (pct >= 60) { title = "Good Progress 📚"; sub = `${score}/${quizQuestions.length} correct. Focus on the topics you missed and retry.`; }
+  else { title = "Keep Studying 💪"; sub = `${score}/${quizQuestions.length} correct. Review the flashcards and formula sheet, then try again.`; }
+
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultSub').textContent = sub;
+}
+
+function retryQuiz() { startQuiz(currentMode); }
+
+// ════════════════════════════════════════
+// FLASHCARDS
+// ════════════════════════════════════════
+function initFlashcards() {
+  fcIndex = 0;
+  document.getElementById('fcWrap').classList.remove('flipped');
+  renderCard();
+}
+
+function renderCard() {
+  const card = FLASHCARDS[fcIndex];
+  document.getElementById('fcWrap').classList.remove('flipped');
+  document.getElementById('fcTerm').textContent = card.term;
+  document.getElementById('fcDef').textContent = card.def;
+  const formula = document.getElementById('fcFormula');
+  if (card.formula) {
+    formula.textContent = card.formula;
+    formula.style.display = 'block';
+  } else {
+    formula.style.display = 'none';
+  }
+  document.getElementById('fcCounter').textContent = `${fcIndex + 1} / ${FLASHCARDS.length}`;
+}
+
+function flipCard() {
+  document.getElementById('fcWrap').classList.toggle('flipped');
+}
+
+function fcNav(dir) {
+  fcIndex = (fcIndex + dir + FLASHCARDS.length) % FLASHCARDS.length;
+  renderCard();
+}
+</script>
+</body>
+</html>
